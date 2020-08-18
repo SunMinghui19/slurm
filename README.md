@@ -247,152 +247,209 @@ Munge凭证基准测试
 
 # 三、配置Slurm
 
-1、创建Slurm用户
-
+## 3.1、创建Slurm用户(所有节点都要做)
+此处跟munge类似，具体指令含义可参考munge
+```
 # groupadd -g 1109 slurm
 # useradd -m -c "Slurm manager" -d /var/lib/slurm -u 1109 -g slurm -s /bin/bash slurm
-
- 
-
-2、安装Slurm依赖
-
+```
+## 3.2、安装Slurm依赖(所有节点都要做)
+```
 # yum install gcc gcc-c++ readline-devel perl-ExtUtils-MakeMaker pam-devel rpm-build mysql-devel -y
-
+```
  
-
-编译Slurm
-
+编译Slurm  
+```
 # wget https://download.schedmd.com/slurm/slurm-19.05.7.tar.bz2 
-# rpmbuild -ta slurm-19.05.7.tar.bz2 
-# cd /root/rpmbuild/RPMS/x86_64/
-
- 
+# rpmbuild -ta slurm-19.05.7.tar.bz2 （此过程可能会等几分钟）
+```
 
 所有节点安装Slurm
-
+```
+# cd /root/rpmbuild/RPMS/x86_64/
 # yum localinstall slurm-*
+```
 
- 
-
-3、配置控制节点Slurm
-复制代码
-
+## 3.3、配置控制节点Slurm（compute1上执行）
+* 从slurm.conf和cgroup.conf的模板中复制出slurm.conf和cgroup.conf
+```
 # cp /etc/slurm/cgroup.conf.example /etc/slurm/cgroup.conf
 # cp /etc/slurm/slurm.conf.example /etc/slurm/slurm.conf
+```
+* 配置slurm.conf文件
+```
 # vim /etc/slurm/slurm.conf
 ##修改如下部分
-ControlMachine=m1
-ControlAddr=192.168.1.11
+ControlMachine=compute1
+
 SlurmUser=slurm
-SlurmctldLogFile=/var/log/slurm/slurmctld.log
-SlurmdLogFile=/var/log/slurm/slurmd.log
-SelectType=select/cons_res
-SelectTypeParameters=CR_CPU_Memory
-NodeName=m[1-3] RealMemory=3400 Sockets=1 CoresPerSocket=2 State=IDLE
-PartitionName=all Nodes=m[1-3] Default=YES State=UP
-
-复制代码
-
+StateSaveLocation=/var/spool/slurmctld (模板里是这样的/slurm/ctld，需要修改)
+SlurmdSpoolDir=/var/spool/slurmd(模板里是这样的/slurm/d，需要修改)
+NodeName=compute[1-3] Procs=1 State=UNKNOWN
+PartitionName=debug Nodes=ALL Default=YES MaxTime=INFINITE State=UP
+```
+* 复制控制节点配置文件到计算节点
+```
+# scp /etc/slurm/*.conf compute:/etc/slurm/
+# scp /etc/slurm/*.conf compute:/etc/slurm/
+```
  
+## 3.4、创建conf中需要的一些文件
+* 控制节点（compute1）
+```
+mkdir /var/spool/slurmctld
+chown slurm: /var/spool/slurmctld
+chmod 755 /var/spool/slurmctld
 
-复制控制节点配置文件到计算节点
+touch /var/log/slurmctld.log
+chown slurm: /var/log/slurmctld.log
+```
+* 计算节点（compute1、compute2和compute3）
+由于我们把compute1即作为控制节点又作为计算节点，所以计算机点的配置也需要做
+```
+mkdir /var/spool/slurmd
+chown slurm: /var/spool/slurmd
+chmod 755 /var/spool/slurmd
 
-# scp /etc/slurm/*.conf m2:/etc/slurm/
-# scp /etc/slurm/*.conf m3:/etc/slurm/
+touch /var/log/slurmd.log
+chown slurm: /var/log/slurmd.log
+```
 
- 
-
-设置控制节点文件权限
-
-# mkdir /var/spool/slurmctld
-# chown slurm.slurm /var/spool/slurmctld
-
- 
-
-设置计算节点文件权限
-
-# mkdir /var/spool/slurmd
-# chown slurm: /var/spool/slurmd
-# mkdir /var/log/slurm
-# chown slurm: /var/log/slurm
-
-
-5、配置控制节点Slurm Accounting
+## 3.5、配置控制节点Slurm Accounting
 Accounting records为slurm收集作业步骤的信息，可以写入一个文本文件或数据库，但这个文件会变得越来越大，最简单的方法是使用MySQL来存储信息。
+我们这里将mysql安装在了compute1上
 
-创建数据库的Slurm用户（MySQL自行安装）
+### 配置Yaml源（compute1执行）
+* 1下载mysql源安装包
+```
+# wget http://dev.mysql.com/get/mysql57-community-release-el7-8.noarch.rpm
+```
+* 2 安装mysql源
+```
+# yum localinstall mysql57-community-release-el7-8.noarch.rpm
+```
+* 3 检查mysql源是否安装成功
+```
+# yum repolist enabled | grep "mysql.*-community.*"
+```
+### 安装mysql（compute1执行）
+* 1安装mysql
+```
+# yum install mysql-community-server
+```
+* 2启动mysql服务，并设置为开机自启动
+```
+# systemctl start mysqld
+# systemctl enable mysqld
+# systemctl daemon-reload
+```
+* 3 修改root本地登录密码
+mysql安装完成之后，在/var/log/mysqld.log文件中给root生成了一个默认密码。通过下面的方式找到root默认密码，然后登录mysql进行修改
+```
+# grep 'temporary password' /var/log/mysqld.log
+```
+获得密码后登陆mysql
+```
+# mysql -uroot -p
+```
+使用如下命令修改密码
+```
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass1!';
+```
+*注意：mysql5.7默认安装了密码安全检查插件（validate_password），默认密码检查策略要求密码必须包含：大小写字母、数字和特殊符号，并且长度不能少于8位。否则会提示ERROR 1819 (HY000): Your password does not satisfy the current policy requirements错误，
 
-mysql> grant all on slurm_acct_db.* to 'slurm'@'%' identified by 'slurm*456' with grant option;
-
- 
-
-配置slurmdbd.conf文件
-复制代码
-
-# cp /etc/slurm/slurmdbd.conf.example /etc/slurm/slurm.conf
-# cat /etc/slurm/slurmdbd.conf
+ * 4 退出即可
+ ```
+ mysql> exit;
+```
+### 配置slurmdbd.conf文件（comoute1上执行）
+从slurmdbd.conf的模板中复制出slurmdbd.conf
+```
+# cp /etc/slurm/slurmdbd.conf.example /etc/slurm/slurmdbd.conf
+```
+配置slurmdbd.conf
+```
+# vim /etc/slurm/slurmdbd.conf
+修改如下内容：
 AuthType=auth/munge
 AuthInfo=/var/run/munge/munge.socket.2
-DbdAddr=192.168.1.11
-DbdHost=m1
+DbdAddr=192.168.133.40 #数据库管理所在的ip
+DbdHost=compute1
 SlurmUser=slurm
 DebugLevel=verbose
-LogFile=/var/log/slurm/slurmdbd.log
+LogFile=/var/log/slurmdbd.log
 PidFile=/var/run/slurmdbd.pid
 StorageType=accounting_storage/mysql
-StorageHost=10.23.227.111
-StorageUser=slrum
-StoragePass=slurm*456
-StorageLoc=slurm_acct_db
+StorageHost=localhost #数据库所在的主机
+StorageUser=root  #数据库连接用户
+StoragePort=3306 #连接myslq的端口
+StoragePass=MyNewPass1! # 数据库连接密码
+StorageLoc=slurm_acct_db #db名，slurmdbd会自动创建db
+```
+创建slurmdbd.conf中配置的文件
+```
+touch /var/log/slurmdbd.log
+chown slurm: /var/log/slurmdbd.log
+```
+此时已经完成slurm的安装，可以使用下面的命令查看当前节点的配置信息
+```
+slurmd -C
+```
 
-复制代码
+## 3.6、开启节点服务
 
+* 1首先在数据库控制节点启动slurmdbd(即compute1)
+在数据库控制节点compute1的控制台中使用slurmdbd -vvvvDDDD，进行调试启动，查看是否启动过程中有无错误。无错误后启动slurmdbd
+```
+# slurmdbd -vvvvDDDD
  
-
-6、开启节点服务
-
-启动控制节点slurmctld服务
-
-# systemctl start slurmctld
-# systemctl status slurmctld
-# systemctl enable slurmctld
-
- 
-
-启动控制节点Slurmdbd服务
-
 # systemctl start slurmdbd
 # systemctl status slurmdbd
 # systemctl enable slurmdbd
-
- 
-
-启动计算节点的服务
-
+```
+* 2 在计算节点上启动slurmd
+```
 # systemctl start slurmd
 # systemctl status slurmd
 # systemctl enable slurmd
+```
+* 3 控制节点上启动slurmctld
+在控制节点compute1，使用slurmctld -vvvvDDDD，进行调试启动，查看启动过程中有无错误。无错误后启动
+```
+# slurmctld -vvvvDDDD
+# systemctl start slurmctld
+# systemctl status slurmctld
+# systemctl enable slurmctld
+```
 
+## 3.7查看日志排错
+```
+在Compute node bugs: tail /var/log/slurmd.log
+在Server node bugs: tail /var/log/slurmctld.log
+在slurmdbd上， tail /var/log/slurmdbd.log
+```
  
 
- 
-
-四、检查Slurm集群
+# 四、检查Slurm集群
 
 查看集群
-
+```
 # sinfo
 # scontrol show partition
 # scontrol show node
-
+```
 提交作业    
-
+```
 # srun -N3 hostname
 # scontrol show jobs
-
+```
 查看作业
-
+```
 # squeue -a
+```
 
+# 参考
+linux中安装mysql https://www.linuxidc.com/Linux/2016-09/135288.htm
+安装slurm1：https://www.cnblogs.com/liu-shaobo/p/13285839.html
+安装slurm2：https://blog.csdn.net/qq_34149581/article/details/101902935
 
-111
