@@ -12,13 +12,14 @@ slurm+openmpi
 
 # 一、基础配置
 ## 1.1配置ip与主机名映射（所有节点都要做）
-使用 hostnamectl set-hostname compute[1-3]分别设置三台主机名
-在compute1上vim /etc/hosts
-添加如下内容：
+使用 hostnamectl set-hostname compute[1-3]分别设置三台主机名  
+在compute1上vim /etc/hosts  
+添加如下内容：  
+```
 192.168.133.40 compute1
 192.168.133.41 compute2
 192.168.133.42 compute3
-
+```
 使用如下命令复制到compute2和compute3
 ```
 # scp /etc/hosts root@compute2:/etc/
