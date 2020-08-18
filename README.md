@@ -189,7 +189,7 @@ Munge是认证服务，实现本地或者远程主机进程的UID、GID验证
 # chown munge: /etc/munge/munge.key
 # chmod 400 /etc/munge/munge.key
 ```
-密钥同步到所有计算节点,并赋予权限
+密钥同步到所有计算节点
 ```
 # scp -p /etc/munge/munge.key root@compute2:/etc/munge
 # scp -p /etc/munge/munge.key root@compute3:/etc/munge
