@@ -460,9 +460,46 @@ slurmd -C
 ```
 # squeue -a
 ```
-
+# 五、Slurm提交openMPI作业
+OpenMPI（open Message Passing Interface），OpenMPI是MPI的一种实现，是信息传递接口库项目
+## 5.1安装openMPI
+```
+# wget https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-4.0.4.tar.bz2
+# tar jxvf openmpi-4.0.4.tar.bz2 
+# cd openmpi-4.0.4/
+# ./configure --prefix=/usr/local/openmpi
+# make
+# make install
+```
+## 5.2添加环境变量
+```
+# vim /etc/profile
+export PATH="/usr/local/openmpi/bin:$PATH"
+export LD_LIBRARY_PATH="/usr/local/openmpi/lib/:$LD_LIBRARY_PATH"
+```
+## 5.3测试mpirun
+```
+# cd openmpi-4.0.4/examples
+# mpicc hello_c.c -o hello
+# mpirun --allow-run-as-root -np 2 hello
+```
+## 5.4slurm提交mpi任务
+```
+# vim hello.sh
+内容如下：
+#!/bin/bash
+#SBATCH --output=/tmp/job.%j.out
+#SBATCH --error=/tmp/job.%j.err
+#SBATCH --nodes=3                    ##使用节点数量
+#SBATCH --ntasks-per-node=2          ##每个节点的进程数
+mpirun --allow-run-as-root -np $SLURM_NPROCS ./openmpi-4.0.4/examples/hello
+```
+提交mpi任务
+```
+# sbatch hello.sh
+```
 # 参考
 linux中安装mysql https://www.linuxidc.com/Linux/2016-09/135288.htm  
 安装slurm1：https://www.cnblogs.com/liu-shaobo/p/13285839.html  
 安装slurm2：https://blog.csdn.net/qq_34149581/article/details/101902935  
-
+slurm提交mpi任务：https://www.cnblogs.com/liu-shaobo/p/13296701.html
