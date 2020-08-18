@@ -44,7 +44,20 @@ slurm+openmpi
 ```
 # yum install http://mirrors.sohu.com/fedora-epel/epel-release-latest-7.noarch.rpm
 ```
-
+## 1.4 配置时区并同步ntp服务器（所有节点都要做）
+配置CST时区
+```
+ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+```
+同步NTP服务器  
+中国国家授时中心：210.72.145.44  
+NTP服务器(上海) ：ntp.api.bz  
+```
+# yum install ntp -y
+# systemctl start ntpd
+# systemctl enable ntpd
+# ntpdate -u ntp.api.bz
+```
 ## 1.4 安装NFS（将nfs服务器安装到compute1即可）
 * 1 安装nfs服务器
 ```
