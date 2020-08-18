@@ -472,6 +472,11 @@ OpenMPI（open Message Passing Interface），OpenMPI是MPI的一种实现，是
 # make install
 ```
 ## 5.2添加环境变量
+先执行如下命令
+```
+# export PATH="/usr/local/openmpi/bin:$PATH"
+# export LD_LIBRARY_PATH="/usr/local/openmpi/lib/:$LD_LIBRARY_PATH"
+```
 ```
 # vim /etc/profile
 export PATH="/usr/local/openmpi/bin:$PATH"
