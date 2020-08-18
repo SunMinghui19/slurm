@@ -78,8 +78,9 @@ slurm+openmpi
 ```
 # mkdir /software
 ```
-* 3 临时挂载 和开机自动挂载  
-临时挂载使用如下命令
+* 3 临时挂载和开机自动挂载 
+
+临时挂载使用如下命令:
 ```
 # mount 192.168.133.40:/software /software
 ```
