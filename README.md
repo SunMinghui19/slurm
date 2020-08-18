@@ -449,7 +449,7 @@ slurmd -C
 ```
 
 # 参考
-linux中安装mysql https://www.linuxidc.com/Linux/2016-09/135288.htm
-安装slurm1：https://www.cnblogs.com/liu-shaobo/p/13285839.html
-安装slurm2：https://blog.csdn.net/qq_34149581/article/details/101902935
+linux中安装mysql https://www.linuxidc.com/Linux/2016-09/135288.htm  
+安装slurm1：https://www.cnblogs.com/liu-shaobo/p/13285839.html  
+安装slurm2：https://blog.csdn.net/qq_34149581/article/details/101902935  
 
