@@ -95,9 +95,12 @@ vim /etc/fstab
 ```
 
 ## 1.6配置SSH免密登录（在compute1上执行）
+ssh-keygen  产生公钥与私钥对.  
+ssh-copy-id 将本机的公钥复制到远程机器的authorized_keys文件中，ssh-copy-id也能让你有到远程机器的home, ~./ssh , 和 ~/.ssh/authorized_keys的权利   
 ```
+#执行如下命令后一路enter就可以
 # ssh-keygen
-# ssh-copy-id -i /root/.ssh/id_rsa.pub compute1
+# 将公钥复制到其他机器上
 # ssh-copy-id -i /root/.ssh/id_rsa.pub compute2
 # ssh-copy-id -i /root/.ssh/id_rsa.pub compute3
 ```
