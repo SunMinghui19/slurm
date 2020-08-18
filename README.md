@@ -35,10 +35,10 @@ slurm+openmpi
 ```
 
 ## 1.3 安装epel源（所有节点都要做）
-* EPEL源-是什么?为什么安装？
+* EPEL源-是什么?为什么安装？  
  EPEL (Extra Packages for Enterprise Linux)是基于Fedora的一个项目，为“红帽系”的操作系统提供额外的软件包，适用于RHEL、CentOS和Scientific Linux.
  我们下面需要用的munge就需要从这个源里面找。
-* 使用很简单：
+* 使用很简单：  
  需要安装一个叫”epel-release”的软件包，这个软件包会自动配置yum的软件仓库。当然你也可以不安装这个包，自己配置软件仓库也是一样的。
  我们这里使用下面的命令直接安装，不再配置软件仓库  
 ```
@@ -59,8 +59,9 @@ slurm+openmpi
 # vim /etc/exports
 ```
 添加如下内容
+```
 /software/ *(rw,async,insecure,no_root_squash)
-
+```
 * 4 启动nfs服务器
 ```
 # systemctl start nfs
@@ -77,17 +78,20 @@ slurm+openmpi
 ```
 # mkdir /software
 ```
-* 3 临时挂载 和开机自动挂载
+* 3 临时挂载 和开机自动挂载  
 临时挂载使用如下命令
 ```
 # mount 192.168.133.40:/software /software
 ```
-开机自动挂载：
-vim /etc/fstab
+开机自动挂载：   
 #在该文件中挂载，使系统每次启动时都能自动挂载
+```
+vim /etc/fstab
+```
 添加如下内容
+```
 192.168.133.40:/software  /software       nfs    defaults 0 0
-
+```
 
 ## 1.6配置SSH免密登录（在compute1上执行）
 ```
