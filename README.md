@@ -451,6 +451,17 @@ slurmd -C
 # scontrol show partition
 # scontrol show node
 ```
+* 注：
+```
+如果sinfo显示无法连接控制器的话可以从新启动一下所有服务
+在compute1上：
+# systemctl restart slurmdbd
+# systemctl restart slurmd
+在compute2和compute3上：
+# systemctl restart slurmd
+最后再compute1上:
+# systemctl restart slurmctld
+```
 提交作业    
 ```
 # srun -N3 hostname
