@@ -294,7 +294,7 @@ Munge凭证基准测试
 # vim /etc/slurm/slurm.conf
 ##修改如下部分
 ControlMachine=compute1
-
+ReturnToService=2（此处如果不设置会导致节点状态为down）
 SlurmUser=slurm
 StateSaveLocation=/var/spool/slurmctld (模板里是这样的/slurm/ctld，需要修改)
 SlurmdSpoolDir=/var/spool/slurmd(模板里是这样的/slurm/d，需要修改)
